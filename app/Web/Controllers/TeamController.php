@@ -12,11 +12,7 @@ use Core\ValidationException;
 
 final class TeamController extends Controller
 {
-    public function index(Request $request): void
-    {
-        $teams = Team::all();
-        $this->view('teams/index.twig', ['teams' => $teams]);
-    }
+   
 
     public function index (Request $request): void 
     {
@@ -35,8 +31,8 @@ final class TeamController extends Controller
      
     public function create (Request $request) : void 
     {
-        $this -> ('teams/add.twig' , [
-            'action' => $this ->view->url ('teams'),
+        $this->view("teams/add.twig", [
+         'action' => $this->view->url('teams')
         ]);
     }
     public function store (Request $request) : void 
