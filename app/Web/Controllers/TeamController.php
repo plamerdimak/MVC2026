@@ -78,7 +78,7 @@ final class TeamController extends Controller
         ]);
     }
 
-    pulic function addMember(Request $request): void 
+     public function addMember(Request $request): void 
     {
         $teamId = (int) $request->param('id');
         if (Team::find($teamId) === null) {
@@ -96,7 +96,7 @@ final class TeamController extends Controller
             ->where('user_id', '=', $userId)
             ->first();
         if ($exists !== null) {
-            $this->session->flash('error', 'Utilisateur déjà membre de l\'équipe.');
+            $this->session->flash('error', 'Utilisateur déjà membre de l équipe.');
             $this->redirect('/teams/' . $teamId);
         }
         $now = time();  
@@ -110,25 +110,55 @@ final class TeamController extends Controller
         $this->redirect('/teams/' . $teamId);
     }
 
-  /*  public function removeMember(Request $request): void 
+    public function removeMember(Request $request): void 
     {
         $teamId = (int) $request->param('id');
-        if (Team::find($teamId) === null) {
-            $this->session->flash('error', 'Equipe introuvable.');
-            $this->redirect('/teams');
-        }
         $userId = (int) $request->param('userId');
-        if ($userId <= 0 || User::find($userId) === null) {
-            $this->session->flash('error', 'Utilisateur invalide.');
-            $this->redirect('/teams/' . $teamId);
-        }
+       
 
         UserTeam::table()
             ->where('team_id', '=', $teamId)
             ->where('user_id', '=', $userId)
             ->delete();
 
-        $this->session->flash('success', 'Utilisateur retiré de l\'équipe.');
+        $this->session->flash('success', 'Utilisateur retiré de l équipe.');
         $this->redirect('/teams/' . $teamId);
     }
+     /**
+      * @return list<array<string, mixed>>
+      */
+
+     private function membersForTeam(int $teamId): array 
+     {
+        return User::query(
+        '
+            SELECT users.id, users.username, users.email,users.role, users.job 
+            FROM  users
+            INNER JOIN usersteam ON usersteam.user_id = users.id
+            WHERE usersteam.team_id = :teamId
+            ORDER BY users.username ASC
+        ', 
+            [ $teamId]
+         );
+     }
+
+     /**
+      * @return list<array<string, mixed>>
+      */
+     private function availableUsersForTeam(int $teamId): array 
+     {
+        return User::query(
+            '
+                SELECT users.id, users.username, users.email,users.role, users.job 
+                FROM  users
+                WHERE users.id NOT IN (
+                    SELECT  userteam.user_id 
+                    FROM usersteam
+                    WHERE usersteam.team_id = ?
+                )
+                ORDER BY users.username ASC
+            ', 
+          [ $teamId]
+        );
+     }
 }
