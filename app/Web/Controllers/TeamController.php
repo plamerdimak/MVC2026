@@ -77,4 +77,58 @@ final class TeamController extends Controller
             'availabe_users' => $this ->availableUsersForTEAM($teamId),
         ]);
     }
+
+    pulic function addMember(Request $request): void 
+    {
+        $teamId = (int) $request->param('id');
+        if (Team::find($teamId) === null) {
+            $this->session->flash('error', 'Equipe introuvable.');
+            $this->redirect('/teams');
+        }
+        $userId = (int) $request->input('user_id', 0);
+        if ($userId <= 0 || User::find($userId) === null) {
+            $this->session->flash('error', 'Utilisateur invalide.');
+            $this->redirect('/teams/' . $teamId);
+        }
+
+        $exists = UserTeam::table()
+            ->where('team_id', '=', $teamId)
+            ->where('user_id', '=', $userId)
+            ->first();
+        if ($exists !== null) {
+            $this->session->flash('error', 'Utilisateur déjà membre de l\'équipe.');
+            $this->redirect('/teams/' . $teamId);
+        }
+        $now = time();  
+        UserTeam::addMember([
+            'team_id' => $teamId,
+            'user_id' => $userId,
+            'created_at' => $now,
+            'updated_at' => $now]);
+
+        $this->session->flash('success', 'Utlisateur ajouter a l equipe.');
+        $this->redirect('/teams/' . $teamId);
+    }
+
+  /*  public function removeMember(Request $request): void 
+    {
+        $teamId = (int) $request->param('id');
+        if (Team::find($teamId) === null) {
+            $this->session->flash('error', 'Equipe introuvable.');
+            $this->redirect('/teams');
+        }
+        $userId = (int) $request->param('userId');
+        if ($userId <= 0 || User::find($userId) === null) {
+            $this->session->flash('error', 'Utilisateur invalide.');
+            $this->redirect('/teams/' . $teamId);
+        }
+
+        UserTeam::table()
+            ->where('team_id', '=', $teamId)
+            ->where('user_id', '=', $userId)
+            ->delete();
+
+        $this->session->flash('success', 'Utilisateur retiré de l\'équipe.');
+        $this->redirect('/teams/' . $teamId);
+    }
 }
